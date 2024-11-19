@@ -64,3 +64,7 @@ void Window::register_viewport_callback(int width, int height) const
 void Window::resize_callback(GLFWwindow* window, int width, int height)
 { glViewport(0, 0, width, height); }
 
+
+void Window::set_input_mode(uint32_t target, uint32_t mode)
+{ glfwSetInputMode(window.get(), target, mode); }
+

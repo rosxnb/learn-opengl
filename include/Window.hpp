@@ -43,6 +43,7 @@ public:
     void        swap_buffers() const;
     void        poll_events() const;
     void        register_viewport_callback(int width, int height) const;
+    void        set_input_mode(uint32_t target, uint32_t mode);
 
 private:
     static void resize_callback(GLFWwindow* window, int width, int height);

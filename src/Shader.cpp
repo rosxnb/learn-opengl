@@ -66,7 +66,7 @@ void Shader::set1(std::string_view const& varname, uint32_t value) const
         glUniform1ui(loc, value);
 }
 
-void Shader::set4x4(std::string_view const& varname, glm::mat4 mat, bool transpose) const
+void Shader::set4x4(std::string_view const& varname, glm::mat4 const& mat, bool transpose) const
 {
     int loc = locate_uniform(varname);
     if (isvalid_location(loc, varname))

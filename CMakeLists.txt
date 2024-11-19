@@ -25,6 +25,7 @@ add_executable(${TARGET_NAME}
     src/Image.cpp
     src/Texture.cpp
     src/main.cpp
+    src/vertices.cpp
 )
 
 target_include_directories(${TARGET_NAME} PRIVATE dependencies/include)

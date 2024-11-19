@@ -20,7 +20,7 @@ public:
     void            set1(std::string_view const& varname, float value) const;
     void            set1(std::string_view const& varname, uint32_t value) const;
 
-    void            set4x4(std::string_view const& varname, glm::mat4 mat, bool transpose = false) const;
+    void            set4x4(std::string_view const& varname, glm::mat4 const& mat, bool transpose = false) const;
 
 private:
     bool            isvalid_location(int loc, std::string_view const& varname) const;
