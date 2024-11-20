@@ -25,26 +25,28 @@ void GLFW::init()
 
 
 Window::Window(int width, int height, std::string const& title)
-    : width  { width }
-    , height { height }
-    , title  { title }
+    : width{ width }, height{ height }, has_camera{ false }
+    , title{ title }, window{ nullptr }
 {
     GLFW::init();
     window = std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow*)>> {
-        glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr), 
+        glfwCreateWindow(
+            this->width,
+            this->height,
+            this->title.c_str(),
+            nullptr,
+            nullptr
+        ), 
         [](GLFWwindow* win){ if (win) glfwDestroyWindow(win); }
     };
-}
+    assert( (window && "FAILED: GLFW window wasn't created.") );
 
-bool Window::operator() () const
-{ return window != nullptr; }
-
-void Window::activate() const
-{
-    assert( (window && "FAILED: GLFW window creation failed.") );
     glfwMakeContextCurrent(window.get());
-    register_viewport_callback(width, height);
+    register_viewport_callback();
 }
+
+Window::operator bool() const
+{ return window != nullptr; }
 
 GLFWwindow* Window::ptr() const
 { return window.get(); }
@@ -58,13 +60,75 @@ void Window::swap_buffers() const
 void Window::poll_events() const
 { glfwPollEvents(); }
 
-void Window::register_viewport_callback(int width, int height) const
-{ glfwSetFramebufferSizeCallback(window.get(), Window::resize_callback); }
+void Window::update_bgcolor(float r, float g, float b, float a) const
+{ glClearColor(r, g, b, a); }
 
-void Window::resize_callback(GLFWwindow* window, int width, int height)
-{ glViewport(0, 0, width, height); }
-
+void Window::update_flags(uint64_t flags) const
+{ glClear(flags); }
 
 void Window::set_input_mode(uint32_t target, uint32_t mode)
 { glfwSetInputMode(window.get(), target, mode); }
+
+void Window::register_camera(Camera* cam)
+{
+    glfwSetWindowUserPointer(window.get(), cam);
+    has_camera = true;
+}
+
+void Window::remove_camera()
+{ has_camera = false; }
+
+void Window::register_viewport_callback() const
+{
+    glfwSetFramebufferSizeCallback(
+        window.get(),
+        [](GLFWwindow* win, int width, int height)
+        {
+            glViewport(0, 0, width, height);
+        }
+    );
+}
+
+void Window::keyboard_events(std::function< void(GLFWwindow*) > const& f) const
+{
+    GLFWwindow* window{ this->window.get() };
+
+    if( f )
+        f(window);
+
+    if( glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS )
+        glfwSetWindowShouldClose(window, true);
+    if( glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS )
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    if( glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS )
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+void Window::mouse_move_events() const
+{
+    assert( has_camera && "ERROR: camera not attached to the window.");
+
+    glfwSetCursorPosCallback(
+        window.get(),
+        [](GLFWwindow* win, double xpos, double ypos)
+        {
+            auto* cam = static_cast<Camera*>(glfwGetWindowUserPointer(win));
+            cam->mouse_callback(xpos, ypos);
+        }
+    );
+}
+
+void Window::mouse_scroll_events() const
+{
+    assert( has_camera && "ERROR: camera not attached to the window.");
+
+    glfwSetScrollCallback(
+        window.get(),
+        [](GLFWwindow* win, double xoffset, double yoffset)
+        {
+            auto* cam = static_cast<Camera*>(glfwGetWindowUserPointer(win));
+            cam->scroll_callback(xoffset, yoffset);
+        }
+    );
+}
 

@@ -7,6 +7,8 @@
 #include <functional>
 #include <string>
 
+#include <Camera.hpp>
+
 
 /*
    class GLFW
@@ -24,7 +26,6 @@ private:
     ~GLFW();
 };
 
-
 class Window
 {
 public:
@@ -35,21 +36,27 @@ public:
 
     Window(int width, int height, std::string const& title);
     ~Window() noexcept = default;
+    operator bool() const;
 
-    bool        operator() () const;
-    void        activate() const;
     GLFWwindow* ptr() const;
     bool        is_closed() const;
     void        swap_buffers() const;
     void        poll_events() const;
-    void        register_viewport_callback(int width, int height) const;
-    void        set_input_mode(uint32_t target, uint32_t mode);
+    void        update_bgcolor(float r, float g, float b, float a) const;
+    void        update_flags(uint64_t flags) const;
 
-private:
-    static void resize_callback(GLFWwindow* window, int width, int height);
+    void        register_viewport_callback() const;
+    void        keyboard_events(std::function< void(GLFWwindow*) > const& f = nullptr) const;
+    void        mouse_move_events() const;
+    void        mouse_scroll_events() const;
+
+    void        set_input_mode(uint32_t target, uint32_t mode);
+    void        register_camera(Camera* cam);
+    void        remove_camera();
     
 private:
     int width, height;
+    bool has_camera;
     std::string title;
     std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow*)>> window;
 };

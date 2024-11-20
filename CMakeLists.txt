@@ -17,13 +17,13 @@ add_executable(${TARGET_NAME}
 
     src/Init.cpp
     src/Window.cpp
-    src/Keyboard.cpp
     src/VertexArray.cpp
     src/VertexBuffer.cpp
     src/IndexBuffer.cpp
     src/Shader.cpp
     src/Image.cpp
     src/Texture.cpp
+    src/Camera.cpp
     src/main.cpp
     src/vertices.cpp
 )
@@ -32,10 +32,7 @@ target_include_directories(${TARGET_NAME} PRIVATE dependencies/include)
 target_include_directories(${TARGET_NAME} PRIVATE include)
 
 target_link_directories (${TARGET_NAME} PRIVATE dependencies/library)
-target_link_libraries   (${TARGET_NAME} PRIVATE 
-    glfw.3.3.dylib
-    glm.dylib
-)
+target_link_libraries   (${TARGET_NAME} PRIVATE glfw.3.3.dylib)
 
 if (APPLE)
     target_link_libraries(${TARGET_NAME} PRIVATE
