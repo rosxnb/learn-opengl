@@ -1,6 +1,7 @@
 # files
 
 .DS_Store
+.clangd
 
 
 # folders

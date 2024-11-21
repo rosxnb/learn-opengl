@@ -45,6 +45,26 @@ int Shader::locate_attribute(std::string_view const& attrib_name) const
 int Shader::locate_uniform(std::string_view const& uniform_name) const
 { return glGetUniformLocation(shader_id, uniform_name.data()); }
 
+bool Shader::isvalid_location(int loc, std::string_view const& varname) const
+{
+    if (loc < 0)
+    {
+        std::cerr << "FAILED: shader couldn't locate variable: " << varname << ".\n";
+        return false;
+    }
+
+    return true;
+}
+
+unsigned int Shader::compile_shader(GLenum shader_type, char const* src_code) const
+{
+    unsigned int id = glCreateShader(shader_type);
+    glShaderSource(id, 1, &src_code, nullptr);
+    glCompileShader(id);
+    print_error(id, GL_COMPILE_STATUS);
+    return id;
+}
+
 void Shader::set1(std::string_view const& varname, int value) const
 {
     int loc = locate_uniform(varname);
@@ -73,17 +93,6 @@ void Shader::set4x4(std::string_view const& varname, glm::mat4 const& mat, bool 
         glUniformMatrix4fv(loc, 1, transpose, &mat[0][0]);
 }
 
-bool Shader::isvalid_location(int loc, std::string_view const& varname) const
-{
-    if (loc < 0)
-    {
-        std::cerr << "FAILED: shader couldn't locate variable: " << varname << ".\n";
-        return false;
-    }
-
-    return true;
-}
-
 std::string Shader::read_file(std::string_view const& filepath) const
 {
     std::string buffer;
@@ -99,23 +108,14 @@ std::string Shader::read_file(std::string_view const& filepath) const
     }
     catch (std::ifstream::failure err)
     {
-        std::cerr << "ERROR: File couldn't be read properly \n location passed: " 
-            << filepath << "\n error message: \n" << err.what() << "\n";
+        std::cerr << "ERROR: File couldn't be read properly \nFile location: " 
+            << filepath << "\nerror message: \n" << err.what() << "\n";
     }
 
     return buffer;
 }
 
-unsigned int Shader::compile_shader(GLenum shader_type, char const* src_code) const
-{
-    unsigned int id = glCreateShader(shader_type);
-    glShaderSource(id, 1, &src_code, nullptr);
-    glCompileShader(id);
-    print_error(id, GL_COMPILE_STATUS);
-    return id;
-}
-
-void Shader::print_error(unsigned int id, GLenum type, bool shader) const
+void Shader::print_error(uint32_t id, GLenum type, bool shader) const
 {
     int sucess_status;
     char infoLog[1024];

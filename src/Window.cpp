@@ -1,27 +1,6 @@
 #include <Window.hpp>
+#include <Glfw.hpp>
 #include <cassert>
-
-
-GLFW::GLFW()
-{
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#if defined(__APPLE__) && defined(__MACH__)
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif // defined(__APPLE__) && defined(__MACH__)
-}
-
-GLFW::~GLFW()
-{
-    glfwTerminate();
-}
-
-void GLFW::init()
-{
-    static GLFW glfw_lifetime_obj;
-}
 
 
 Window::Window(int width, int height, std::string const& title)
@@ -42,7 +21,7 @@ Window::Window(int width, int height, std::string const& title)
     assert( (window && "FAILED: GLFW window wasn't created.") );
 
     glfwMakeContextCurrent(window.get());
-    register_viewport_callback();
+    handle_viewport_resize();
 }
 
 Window::operator bool() const
@@ -60,25 +39,16 @@ void Window::swap_buffers() const
 void Window::poll_events() const
 { glfwPollEvents(); }
 
-void Window::update_bgcolor(float r, float g, float b, float a) const
-{ glClearColor(r, g, b, a); }
-
 void Window::update_flags(uint64_t flags) const
 { glClear(flags); }
 
-void Window::set_input_mode(uint32_t target, uint32_t mode)
+void Window::update_bgcolor(float r, float g, float b, float a) const
+{ glClearColor(r, g, b, a); }
+
+void Window::set_input_mode(uint32_t target, uint32_t mode) const
 { glfwSetInputMode(window.get(), target, mode); }
 
-void Window::register_camera(Camera* cam)
-{
-    glfwSetWindowUserPointer(window.get(), cam);
-    has_camera = true;
-}
-
-void Window::remove_camera()
-{ has_camera = false; }
-
-void Window::register_viewport_callback() const
+void Window::handle_viewport_resize() const
 {
     glfwSetFramebufferSizeCallback(
         window.get(),
@@ -89,22 +59,7 @@ void Window::register_viewport_callback() const
     );
 }
 
-void Window::keyboard_events(std::function< void(GLFWwindow*) > const& f) const
-{
-    GLFWwindow* window{ this->window.get() };
-
-    if( f )
-        f(window);
-
-    if( glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS )
-        glfwSetWindowShouldClose(window, true);
-    if( glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS )
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    if( glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS )
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-}
-
-void Window::mouse_move_events() const
+void Window::handle_mouse_movements() const
 {
     assert( has_camera && "ERROR: camera not attached to the window.");
 
@@ -112,13 +67,28 @@ void Window::mouse_move_events() const
         window.get(),
         [](GLFWwindow* win, double xpos, double ypos)
         {
+            static bool first_mouse = true;
+            static float last_x, last_y;
+
+            if( first_mouse )
+            {
+                last_x = xpos;
+                last_y = ypos;
+                first_mouse = false;
+            }
+
+            float xoffset = xpos - last_x;
+            float yoffset = last_y - ypos;
+            last_x = xpos;
+            last_y = ypos;
+
             auto* cam = static_cast<Camera*>(glfwGetWindowUserPointer(win));
-            cam->mouse_callback(xpos, ypos);
+            cam->mouse_callback(xoffset, yoffset);
         }
     );
 }
 
-void Window::mouse_scroll_events() const
+void Window::handle_mouse_scroll() const
 {
     assert( has_camera && "ERROR: camera not attached to the window.");
 
@@ -131,4 +101,37 @@ void Window::mouse_scroll_events() const
         }
     );
 }
+
+void Window::process_keypress(std::function< void(Camera::MOVEMENT) > const& cam_keyboard_callback) const
+{
+    GLFWwindow* window{ this->window.get() };
+
+    if( glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS )
+        glfwSetWindowShouldClose(window, true);
+    if( glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS )
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    if( glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS )
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    if( cam_keyboard_callback )
+    {
+        if( glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS )
+            cam_keyboard_callback( Camera::MOVEMENT::FORWARD );
+        if( glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS )
+            cam_keyboard_callback( Camera::MOVEMENT::BACKWARD );
+        if( glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS )
+            cam_keyboard_callback( Camera::MOVEMENT::LEFT );
+        if( glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS )
+            cam_keyboard_callback( Camera::MOVEMENT::RIGHT );
+    }
+}
+
+void Window::register_camera(Camera* cam)
+{
+    glfwSetWindowUserPointer(window.get(), cam);
+    has_camera = true;
+}
+
+void Window::remove_camera()
+{ has_camera = false; }
 

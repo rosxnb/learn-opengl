@@ -12,7 +12,7 @@ Camera::Camera(float pitch, float yaw, glm::vec3 const& position, glm::vec3 cons
 
 glm::mat4 Camera::generate_view_space(bool use_glm) const
 {
-    // ensure target_position remains fixed dispite camera movement
+    // ensure target_position remains fixed dispite camera movement with keypress
     glm::vec3 target_position = this->target_position + position;
 
     if (use_glm)
@@ -26,7 +26,9 @@ glm::mat4 Camera::generate_view_space(bool use_glm) const
     glm::vec4 U{ up_vector, 0.f };
     glm::vec4 D{ direction_vector, 0.f };
 
-    glm::mat4 axis_mat      { R, U, D, glm::vec4(0.f, 0.f, 0.f, 1.f) };
+    glm::vec4 W{ 0.f, 0.f, 0.f, 1.f };
+    glm::mat4 axis_mat{ R, U, D, W };
+
     glm::mat4 translate_mat {
         glm::vec4{1.f, 0.f, 0.f, 0.f},
         glm::vec4{0.f, 1.f, 0.f, 0.f},
@@ -45,33 +47,21 @@ glm::mat4 Camera::generate_view_space(bool use_glm) const
     return glm::transpose(axis_mat) * translate_mat;
 }
 
-void Camera::keyboard_callback(float delta_time, GLFWwindow* window)
+void Camera::keyboard_callback(float delta_time, Camera::MOVEMENT direction)
 {
     float velocity = movement_speed * delta_time;
-    if( glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS )
+    if( direction == MOVEMENT::FORWARD )
         position += velocity * target_position;
-    if( glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS )
+    if( direction == MOVEMENT::BACKWARD )
         position -= velocity * target_position;
-    if( glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS )
+    if( direction == MOVEMENT::LEFT )
         position -= velocity * glm::normalize(glm::cross(target_position, worldspace_up));
-    if( glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS )
+    if( direction == MOVEMENT::RIGHT )
         position += velocity * glm::normalize(glm::cross(target_position, worldspace_up));
 }
 
-void Camera::mouse_callback(float xpos, float ypos)
+void Camera::mouse_callback(float xoffset, float yoffset)
 {
-    if( first_mouse )
-    {
-        last_x = xpos;
-        last_y = ypos;
-        first_mouse = false;
-    }
-
-    float xoffset = xpos - last_x;
-    float yoffset = last_y - ypos;
-    last_x = xpos;
-    last_y = ypos;
-
     xoffset *= mouse_sensitivity;
     yoffset *= mouse_sensitivity;
 

@@ -6,7 +6,6 @@ Texture::Texture(uint32_t slot)
     : slot{ slot }
     , id{ 0 }
     , image{ nullptr }
-    , border_color{ {0.f, 0.f, 0.f, 0.f} }
 {
     init();
 }
@@ -15,7 +14,6 @@ Texture::Texture(std::unique_ptr<Image> image, uint32_t slot)
     : slot{ slot }
     , id{ 0 }
     , image{ std::move(image) }
-    , border_color{ {0.f, 0.f, 0.f, 0.f} }
 {
     init();
     generate_texture(this->image->format);
@@ -40,6 +38,55 @@ void Texture::load_image(std::string_view const& path, GLenum format, bool do_vf
     generate_texture(format);
 }
 
+uint32_t Texture::current_slot() const
+{ return slot; }
+
+void Texture::activate_texture_unit(uint32_t slot) const
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+}
+
+void Texture::bind() const
+{
+    glBindTexture(GL_TEXTURE_2D, id);
+}
+
+void Texture::unbind() const
+{
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Texture::set_filter(ZOOM zoom, GLenum value) const
+{
+    switch(zoom)
+    {
+        case ZOOM::OUT:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, value);
+            break;
+        case ZOOM::IN:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, value);
+            break;
+    }
+}
+
+void Texture::set_wrap(AXIS axis, GLenum value) const
+{
+    switch(axis)
+    {
+        case AXIS::X:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, value);
+            break;
+        case AXIS::Y:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, value);
+            break;
+    }
+}
+
+void Texture::set_border_color(std::array<float, 4> const& border_color)
+{
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color.data());
+}
+
 void Texture::generate_texture(GLenum format) const
 {
     glTexImage2D(
@@ -60,54 +107,4 @@ void Texture::generate_texture(GLenum format) const
     set_filter(ZOOM::IN, GL_LINEAR);
     set_filter(ZOOM::OUT, GL_LINEAR_MIPMAP_LINEAR);
 }
-
-void Texture::unbind() const
-{
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void Texture::bind() const
-{
-    glBindTexture(GL_TEXTURE_2D, id);
-}
-
-void Texture::activate_texture_unit(uint32_t slot) const
-{
-    glActiveTexture(GL_TEXTURE0 + slot);
-}
-
-void Texture::set_wrap(AXIS axis, GLenum value) const
-{
-    switch(axis)
-    {
-        case AXIS::X:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, value);
-            break;
-        case AXIS::Y:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, value);
-            break;
-    }
-}
-
-void Texture::set_border_color(std::array<float, 4> const& border_color)
-{
-    this->border_color = border_color;
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, this->border_color.data());
-}
-
-void Texture::set_filter(ZOOM zoom, GLenum value) const
-{
-    switch(zoom)
-    {
-        case ZOOM::OUT:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, value);
-            break;
-        case ZOOM::IN:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, value);
-            break;
-    }
-}
-
-uint32_t Texture::current_slot() const
-{ return slot; }
 

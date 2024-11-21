@@ -8,8 +8,8 @@ class VertexArray
         explicit VertexArray();
         ~VertexArray() noexcept;
 
-        void unbind() const;
         void bind() const;
+        void unbind() const;
         void set_buffer_attribute(unsigned int loc, int ncomponents, int stride, uint64_t offset_bytes) const;
 
     private:

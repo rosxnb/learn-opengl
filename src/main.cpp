@@ -7,9 +7,6 @@
 #include <Texture.hpp>
 #include <Camera.hpp>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 int main()
 {
     constexpr int w_width  = 950;
@@ -41,8 +38,8 @@ int main()
 
     Camera cam{ glm::vec3(0.f, 0.f, 3.f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.f, 1.f, 0.f) };
     window.register_camera(&cam);
-    window.mouse_move_events();
-    window.mouse_scroll_events();
+    window.handle_mouse_movements();
+    window.handle_mouse_scroll();
 
     float delta_time{ 0.f };
     float last_frame{ 0.f };
@@ -55,7 +52,7 @@ int main()
         delta_time          = current_frame - last_frame;
         last_frame          = current_frame;
 
-        window.keyboard_events( std::bind_front(&Camera::keyboard_callback, &cam, delta_time) );
+        window.process_keypress( std::bind_front(&Camera::keyboard_callback, &cam, delta_time) );
 
         glm::mat4 projection{ glm::perspective(glm::radians(cam.fov), (float)w_width/w_height, 0.1f, 100.f) };
         glm::mat4 view{ cam.generate_view_space() };

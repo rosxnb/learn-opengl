@@ -9,9 +9,9 @@
 class Image
 {
 public:
-    Image(Image&&) = default;
-    Image& operator=(Image&&) = default;
-    ~Image() noexcept = default;
+    Image(Image&&)              = default;
+    Image& operator=(Image&&)   = default;
+    ~Image() noexcept           = default;
 
     explicit Image(std::string_view path, GLenum format = GL_RGBA, bool do_vflip = true, int desired_channels = 0);
     Image(Image const&);

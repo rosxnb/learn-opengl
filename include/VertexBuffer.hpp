@@ -8,8 +8,8 @@ class VertexBuffer
         VertexBuffer();
         ~VertexBuffer() noexcept;
 
-        void unbind() const;
         void bind() const;
+        void unbind() const;
         void update_data(float const* buffer, unsigned int nbytes) const;
 
     private:

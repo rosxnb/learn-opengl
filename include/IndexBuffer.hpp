@@ -8,8 +8,8 @@ class IndexBuffer
         explicit IndexBuffer();
         ~IndexBuffer() noexcept;
 
-        void unbind() const;
         void bind() const;
+        void unbind() const;
         void update_indices(unsigned int* buffer, uint32_t nbytes) const;
 
     private:

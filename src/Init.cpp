@@ -1,4 +1,6 @@
 #include <Init.hpp>
+
+#include <GLFW/glfw3.h>
 #include <cassert>
 
 

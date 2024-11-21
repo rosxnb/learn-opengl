@@ -15,6 +15,7 @@ add_executable(${TARGET_NAME}
     src/dependencies/glad.cpp
     src/dependencies/stb_image.cpp
 
+    src/Glfw.cpp
     src/Init.cpp
     src/Window.cpp
     src/VertexArray.cpp
